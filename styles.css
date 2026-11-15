@@ -857,6 +857,62 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
   margin: 0 0 18px;
 }
 
+.fit-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin: 28px auto 0;
+  max-width: 1100px;
+  text-align: left;
+}
+
+.fit-card {
+  min-height: 0;
+  padding: 22px;
+  border: 1px solid rgba(255, 255, 255, .12);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, .045);
+}
+
+.fit-card h3 {
+  margin: 0 0 10px;
+  font-size: 22px;
+}
+
+.fit-card p,
+.fit-card li {
+  color: var(--muted);
+  font-size: 16px;
+}
+
+.fit-card ol {
+  margin: 0;
+  padding-left: 1.2em;
+}
+
+.pilot-status {
+  margin: 16px auto 0;
+  max-width: 680px;
+  color: #ffe7a3;
+  font-weight: 750;
+  font-size: 15px;
+}
+
+.pilot-offer {
+  padding: 14px 16px;
+  border: 1px solid rgba(255, 209, 102, .28);
+  border-radius: 14px;
+  background: rgba(255, 209, 102, .08);
+  color: #ffe7a3;
+}
+
+.form-field select option { color: #122033; background: #fff; }
+.pilot-form select:focus-visible,
+.pilot-form input:focus-visible {
+  outline: 3px solid rgba(145, 229, 255, .75);
+  outline-offset: 2px;
+}
+
 .snapshot-side {
   min-height: 188px;
   padding: 24px;
@@ -1004,7 +1060,8 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
   }
 
   .comparison-snapshot,
-  .resource-link-list {
+  .resource-link-list,
+  .fit-grid {
     grid-template-columns: 1fr;
   }
 

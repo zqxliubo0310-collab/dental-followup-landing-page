@@ -20,7 +20,10 @@ test('pilot form reports success only after notification and sends practice fiel
   const body = {
     name: 'Alex', email: 'alex@example.com', practice_name: 'Example Dental',
     role: 'office_manager', workflow: 'unscheduled_treatment', locations: '1',
-    consent: true, patient_details: 'should not be sent'
+    country: 'united_kingdom', pms: 'dentally', language: 'english', channel: 'whatsapp',
+    source_page: 'maxassist-alternatives', campaign: 'pilot-fit',
+    utm_source: 'newsletter', utm_campaign: 'ads',
+    consent: true, patient_details: 'should not be sent', patient_file: 'patients.csv'
   };
   try {
     console.error = () => {};
@@ -36,7 +39,14 @@ test('pilot form reports success only after notification and sends practice fiel
     assert.equal((await submit(body, '198.51.100.41')).status, 200);
     assert.equal(mail.to, 'founder@example.com');
     assert.match(mail.text, /Example Dental/);
-    assert.doesNotMatch(mail.text, /patient_details|should not be sent/);
+    assert.match(mail.text, /Country: United Kingdom/);
+    assert.match(mail.text, /PMS: Dentally/);
+    assert.match(mail.text, /Language: English/);
+    assert.match(mail.text, /Contact channel: WhatsApp/);
+    assert.match(mail.text, /Source page: maxassist-alternatives/);
+    assert.match(mail.text, /Campaign: pilot-fit/);
+    assert.match(mail.text, /UTM Campaign: ads/);
+    assert.doesNotMatch(mail.text, /patient_details|should not be sent|patients\.csv/);
 
     global.fetch = async () => ({ ok: false, status: 503, text: async () => '{}' });
     const unavailable = await submit(body, '198.51.100.42');
@@ -44,6 +54,18 @@ test('pilot form reports success only after notification and sends practice fiel
     assert.equal(unavailable.body.success, false);
     assert.equal((await submit({ ...body, workflow: 'unknown' }, '198.51.100.43')).status, 400);
     assert.equal((await submit({ ...body, consent: false }, '198.51.100.44')).status, 400);
+    assert.equal((await submit({ ...body, country: '' }, '198.51.100.45')).status, 400);
+    assert.equal((await submit({ ...body, pms: 'certified_badge' }, '198.51.100.46')).status, 400);
+    assert.equal((await submit({ ...body, language: 'patient-note' }, '198.51.100.47')).status, 400);
+    global.fetch = async (url, options) => {
+      assert.equal(url, 'https://api.resend.com/emails');
+      mail = JSON.parse(options.body);
+      return { ok: true, text: async () => '{}' };
+    };
+    const noPms = await submit({ ...body, pms: 'none', language: '', channel: '', source_page: '', campaign: '' }, '198.51.100.48');
+    assert.equal(noPms.status, 200);
+    assert.match(mail.text, /PMS: No PMS/);
+    assert.match(mail.text, /Source page: \n/);
   } finally {
     global.fetch = originalFetch;
     console.error = originalError;

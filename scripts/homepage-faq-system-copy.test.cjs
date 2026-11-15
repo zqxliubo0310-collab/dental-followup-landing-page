@@ -10,7 +10,7 @@ const guide = fs.readFileSync(path.join(root, 'resources/open-dental-unscheduled
 
 const question = 'How do I run an unscheduled treatment report in Open Dental?';
 const answer = 'See our step-by-step guide to running an unscheduled treatment report in Open Dental. Once you have the report, the next step is assigning follow-up owners and tracking appointment outcomes.';
-const systemCopy = 'Using Open Dental, Dentrix, or another practice management system? Explore our follow-up workflow guides.';
+const systemCopy = 'Use Dentally, Software of Excellence EXACT, Dentrix, Open Dental, or another PMS? Tell us your system and available export so we can check pilot fit.';
 const guideHref = '/resources/open-dental-unscheduled-treatment-report/';
 const guidesHref = '/resources/';
 
@@ -38,7 +38,7 @@ test('homepage FAQ question, answer, and structured data stay aligned', () => {
 
 test('system note points at existing guides and does not claim a standalone workflow', () => {
   for (const html of [home, workflow]) {
-    assert.equal(visibleText(html, /<p>(Using Open Dental, Dentrix, or another practice management system\?.*?)<\/p>/), systemCopy);
+    assert.equal(visibleText(html, /<p>(Use Dentally, Software of Excellence EXACT, Dentrix, Open Dental, or another PMS\?.*?)<\/p>/), systemCopy);
     assert.match(html, new RegExp(`<a href="${guidesHref}">follow-up workflow guides</a>`));
     assert.equal(html.includes('Start with a standalone follow-up workflow'), false);
     assert.equal(html.includes('Optimized for'), false);

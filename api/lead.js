@@ -13,15 +13,17 @@
   enforceRateLimit,
   sendEmail,
   formatCurrency,
+  normalizeDisplayCurrency,
   leakDisplayNames,
   leakDiagnoses
 } = require('./_utils');
 const { normalizeCalculatorInputs, calculateResults } = require('./_calculator');
 
-function buildBreakdownEmail(lead) {
+function buildBreakdownEmail(lead, currency) {
   const largestLeakName = leakDisplayNames[lead.largest_leak] || 'Follow-Up Leakage';
   const diagnosis = leakDiagnoses[lead.largest_leak] || '';
   const recoveryKitUrl = 'https://www.getpraxora.com/follow-up-recovery-kit/';
+  const code = currency || 'USD';
   return `Hi ${lead.first_name},
 
 Based on the information you entered, your largest estimated follow-up gap appears to be:
@@ -33,15 +35,17 @@ ${diagnosis}
 Your estimated workflow exposure:
 
 Missed Calls
-${formatCurrency(lead.missed_call_opportunity)}
+${formatCurrency(lead.missed_call_opportunity, code)}
 
 Unscheduled Treatment
-${formatCurrency(lead.unscheduled_treatment_opportunity)}
+${formatCurrency(lead.unscheduled_treatment_opportunity, code)}
 
 Overdue Recall
-${formatCurrency(lead.recall_opportunity)}
+${formatCurrency(lead.recall_opportunity, code)}
 
 These are directional estimates based on the information you provided and general workflow assumptions. They are not guaranteed revenue or recovery outcomes.
+
+Figures are in ${code}, the currency selected for the amounts you entered. Those numbers were not converted. The introductory price remains USD 49.50 per month and is not recalculated here.
 
 What matters most is where your follow-up process may be breaking.
 
@@ -153,12 +157,13 @@ module.exports = async function handler(req, res) {
     console.error('Supabase is not configured. Calculator lead accepted without storing a leads row.');
   }
 
+  const displayCurrency = normalizeDisplayCurrency(payload.display_currency);
   let emailSent = false;
   try {
     await sendEmail({
       to: email,
       subject: 'Your follow-up leakage breakdown',
-      text: buildBreakdownEmail(lead)
+      text: buildBreakdownEmail(lead, displayCurrency)
     });
     emailSent = true;
     await updateSupabase('leads', stored && stored.id, { email_status: 'sent' });

@@ -16,9 +16,30 @@ const calculatorState = {
   overdueRecallCount: null,
   averageRecallValue: null,
   recallWorkflowStatus: null,
+  unscheduledFollowupFactor: null,
+  recallWorkflowFactor: null,
+  currency: 'USD',
   utm: {},
   results: { missedCallOpportunity: 0, unscheduledTreatmentOpportunity: 0, recallOpportunity: 0, missedCallScore: 0, unscheduledTreatmentScore: 0, recallScore: 0, largestLeak: null }
 };
+
+const CURRENCY_CODES = ['GBP', 'EUR', 'USD', 'AUD', 'SGD'];
+
+function normalizeCurrency(code) {
+  const value = String(code || '').toUpperCase();
+  return CURRENCY_CODES.includes(value) ? value : 'USD';
+}
+
+function formatMoney(value, currencyCode = 'USD') {
+  const code = normalizeCurrency(currencyCode);
+  const numeric = Number(value);
+  const rounded = Number.isFinite(numeric) ? Math.round(numeric) : 0;
+  const amount = Object.is(rounded, -0) ? 0 : rounded;
+  const formatted = new Intl.NumberFormat('en-GB', { maximumFractionDigits: 0, minimumFractionDigits: 0 }).format(amount);
+  if (code === 'GBP') return `£${formatted}`;
+  if (code === 'EUR') return `€${formatted}`;
+  return `${code} ${formatted}`;
+}
 
 const optionSets = {
   missed_call_rate: [
@@ -39,7 +60,6 @@ const missedFollowupGapScores = { almost_all: 5, more_than_half: 15, less_than_h
 const treatmentScores = { consistent: 15, occasional: 40, staff_time: 70, no_process: 90, unknown: 50 };
 const recallScores = { consistent: 15, partial: 55, no: 90, unknown: 50 };
 
-function money(value) { return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(Math.round(value || 0)); }
 function numberValue(id) { const value = Number(document.getElementById(id)?.value); return Number.isFinite(value) ? value : NaN; }
 function selected(name) { const input = document.querySelector(`input[name="${name}"]:checked`); return input ? input.value : ''; }
 function selectedData(name) { const input = document.querySelector(`input[name="${name}"]:checked`); return input ? Number(input.dataset.factor) : NaN; }
@@ -101,6 +121,7 @@ function validateStepTwo() {
   calculatorState.unscheduledPatientCount = knows === 'yes' ? null : numberValue('unscheduled_patient_count');
   calculatorState.averageTreatmentValue = knows === 'yes' ? null : numberValue('average_treatment_value');
   calculatorState.unscheduledFollowupProcess = selected('unscheduled_followup_process');
+  calculatorState.unscheduledFollowupFactor = selectedData('unscheduled_followup_process');
   return true;
 }
 
@@ -114,21 +135,33 @@ function validateStepThree() {
   calculatorState.overdueRecallCount = numberValue('overdue_recall_count');
   calculatorState.averageRecallValue = numberValue('average_recall_value');
   calculatorState.recallWorkflowStatus = selected('recall_workflow_status');
+  calculatorState.recallWorkflowFactor = selectedData('recall_workflow_status');
   return true;
 }
 
-function calculateMissedCallOpportunity() {
-  const monthlyCalls = calculatorState.dailyCalls * BUSINESS_DAYS_PER_MONTH;
-  const estimatedMissedCalls = monthlyCalls * calculatorState.missedCallRate;
-  const unfollowedMissedCalls = estimatedMissedCalls * (1 - calculatorState.missedCallFollowupRate);
-  return unfollowedMissedCalls * MISSED_CALL_BOOKING_OPPORTUNITY_RATE * calculatorState.averageNewPatientValue;
+function calculateMissedCallOpportunity(state = calculatorState) {
+  const monthlyCalls = state.dailyCalls * BUSINESS_DAYS_PER_MONTH;
+  const estimatedMissedCalls = monthlyCalls * state.missedCallRate;
+  const unfollowedMissedCalls = estimatedMissedCalls * (1 - state.missedCallFollowupRate);
+  return unfollowedMissedCalls * MISSED_CALL_BOOKING_OPPORTUNITY_RATE * state.averageNewPatientValue;
 }
-function baseUnscheduledValue() { return calculatorState.knowsUnscheduledValue === 'yes' ? calculatorState.unscheduledTreatmentValue : calculatorState.unscheduledPatientCount * calculatorState.averageTreatmentValue; }
-function calculateUnscheduledTreatmentOpportunity() { return baseUnscheduledValue() * selectedData('unscheduled_followup_process'); }
-function calculateRecallOpportunity() { return calculatorState.overdueRecallCount * calculatorState.averageRecallValue * selectedData('recall_workflow_status'); }
-function calculateMissedCallScore() { return Math.min(100, missedRateScores[calculatorState.missedCallRateKey] + missedFollowupGapScores[calculatorState.missedCallFollowupKey]); }
-function calculateUnscheduledTreatmentScore() { const base = treatmentScores[calculatorState.unscheduledFollowupProcess]; const value = baseUnscheduledValue(); const modifier = value > 500000 ? 15 : value >= 150000 ? 10 : value >= 50000 ? 5 : 0; return Math.min(100, base + modifier); }
-function calculateRecallScore() { const base = recallScores[calculatorState.recallWorkflowStatus]; const count = calculatorState.overdueRecallCount; const modifier = count > 1000 ? 15 : count >= 300 ? 10 : count >= 100 ? 5 : 0; return Math.min(100, base + modifier); }
+function baseUnscheduledValue(state = calculatorState) { return state.knowsUnscheduledValue === 'yes' ? state.unscheduledTreatmentValue : state.unscheduledPatientCount * state.averageTreatmentValue; }
+function factorFrom(state, key, name) { return Number.isFinite(state[key]) ? state[key] : selectedData(name); }
+function calculateUnscheduledTreatmentOpportunity(state = calculatorState) { return baseUnscheduledValue(state) * factorFrom(state, 'unscheduledFollowupFactor', 'unscheduled_followup_process'); }
+function calculateRecallOpportunity(state = calculatorState) { return state.overdueRecallCount * state.averageRecallValue * factorFrom(state, 'recallWorkflowFactor', 'recall_workflow_status'); }
+function calculateMissedCallScore(state = calculatorState) { return Math.min(100, missedRateScores[state.missedCallRateKey] + missedFollowupGapScores[state.missedCallFollowupKey]); }
+function calculateUnscheduledTreatmentScore(state = calculatorState) { const base = treatmentScores[state.unscheduledFollowupProcess]; const value = baseUnscheduledValue(state); const modifier = value > 500000 ? 15 : value >= 150000 ? 10 : value >= 50000 ? 5 : 0; return Math.min(100, base + modifier); }
+function calculateRecallScore(state = calculatorState) { const base = recallScores[state.recallWorkflowStatus]; const count = state.overdueRecallCount; const modifier = count > 1000 ? 15 : count >= 300 ? 10 : count >= 100 ? 5 : 0; return Math.min(100, base + modifier); }
+function computeOpportunities(state) {
+  return {
+    missedCallOpportunity: calculateMissedCallOpportunity(state),
+    unscheduledTreatmentOpportunity: calculateUnscheduledTreatmentOpportunity(state),
+    recallOpportunity: calculateRecallOpportunity(state),
+    missedCallScore: calculateMissedCallScore(state),
+    unscheduledTreatmentScore: calculateUnscheduledTreatmentScore(state),
+    recallScore: calculateRecallScore(state)
+  };
+}
 function determineLargestLeak() { const scores = calculatorState.results; const max = Math.max(scores.unscheduledTreatmentScore, scores.missedCallScore, scores.recallScore); if (scores.unscheduledTreatmentScore === max) return 'unscheduled_treatment'; if (scores.missedCallScore === max) return 'missed_calls'; return 'overdue_recall'; }
 function calculateResults() { calculatorState.results.missedCallOpportunity = calculateMissedCallOpportunity(); calculatorState.results.unscheduledTreatmentOpportunity = calculateUnscheduledTreatmentOpportunity(); calculatorState.results.recallOpportunity = calculateRecallOpportunity(); calculatorState.results.missedCallScore = calculateMissedCallScore(); calculatorState.results.unscheduledTreatmentScore = calculateUnscheduledTreatmentScore(); calculatorState.results.recallScore = calculateRecallScore(); calculatorState.results.largestLeak = determineLargestLeak(); }
 
@@ -142,7 +175,8 @@ function renderResults() {
   const data = calculatorState.results;
   const copy = resultCopy[data.largestLeak];
   document.getElementById('largestLeakTitle').textContent = copy.title;
-  document.getElementById('resultGrid').innerHTML = `<div class="result-metric"><span>Missed Calls</span><strong>${money(data.missedCallOpportunity)}</strong><p>Estimated monthly opportunity at risk</p></div><div class="result-metric"><span>Unscheduled Treatment</span><strong>${money(data.unscheduledTreatmentOpportunity)}</strong><p>Estimated treatment opportunity exposed to follow-up gaps</p></div><div class="result-metric"><span>Overdue Recall</span><strong>${money(data.recallOpportunity)}</strong><p>Estimated recall opportunity exposed to follow-up gaps</p></div>`;
+  const code = normalizeCurrency(calculatorState.currency);
+  document.getElementById('resultGrid').innerHTML = `<div class="result-metric"><span>Missed Calls</span><strong>${formatMoney(data.missedCallOpportunity, code)}</strong><p>Estimated monthly opportunity at risk</p></div><div class="result-metric"><span>Unscheduled Treatment</span><strong>${formatMoney(data.unscheduledTreatmentOpportunity, code)}</strong><p>Estimated treatment opportunity exposed to follow-up gaps</p></div><div class="result-metric"><span>Overdue Recall</span><strong>${formatMoney(data.recallOpportunity, code)}</strong><p>Estimated recall opportunity exposed to follow-up gaps</p></div>`;
   document.getElementById('diagnosisTitle').textContent = copy.title;
   document.getElementById('diagnosisCopy').innerHTML = copy.diagnosis.split('\n\n').map((text) => `<span>${text}</span>`).join('<br><br>');
   document.getElementById('workflowLine').innerHTML = copy.workflow.map((item) => `<li>${item}</li>`).join('');
@@ -178,8 +212,25 @@ function leadPayload(form) {
     utm_source: calculatorState.utm.utm_source || '',
     utm_medium: calculatorState.utm.utm_medium || '',
     utm_campaign: calculatorState.utm.utm_campaign || '',
-    utm_content: calculatorState.utm.utm_content || ''
+    utm_content: calculatorState.utm.utm_content || '',
+    display_currency: normalizeCurrency(calculatorState.currency)
   };
+}
+
+function labelCurrencyNodes(root, currencyCode) {
+  const code = normalizeCurrency(currencyCode);
+  root.querySelectorAll('[data-currency-code]').forEach((node) => { node.textContent = code; });
+  root.querySelectorAll('[data-money-amount]').forEach((node) => {
+    node.textContent = formatMoney(Number(node.getAttribute('data-money-amount')), code);
+  });
+  return code;
+}
+
+function applyCurrencyLabels() {
+  const selectedCode = document.getElementById('calculatorCurrency')?.value;
+  const code = labelCurrencyNodes(document, selectedCode || calculatorState.currency);
+  calculatorState.currency = code;
+  return code;
 }
 function showStep(step) { document.querySelectorAll('.calc-step').forEach((node) => node.classList.toggle('active', node.dataset.step === String(step))); document.querySelectorAll('[data-progress]').forEach((node) => node.classList.toggle('active', Number(node.dataset.progress) <= step)); }
 
@@ -187,7 +238,12 @@ function largestLeakEventName() { if (calculatorState.results.largestLeak === 'm
 
 function initCalculator() {
   let calculatorCompleted = false;
-  renderOptions(); captureUTMParameters(); safeTrack('calculator_view', calculatorState.utm);
+  renderOptions(); captureUTMParameters(); applyCurrencyLabels(); safeTrack('calculator_view', calculatorState.utm);
+  document.getElementById('calculatorCurrency')?.addEventListener('change', () => {
+    applyCurrencyLabels();
+    const resultView = document.getElementById('resultView');
+    if (resultView && !resultView.hidden) renderResults();
+  });
   document.getElementById('startCalculator')?.addEventListener('click', () => { document.getElementById('calculatorApp').scrollIntoView({ behavior: 'smooth' }); safeTrack('calculator_start', calculatorState.utm); });
   document.querySelector('[data-group="knows_unscheduled_value"]').addEventListener('change', syncTreatmentFields);
   document.querySelectorAll('[data-next]').forEach((button) => button.addEventListener('click', () => { const step = Number(button.closest('.calc-step').dataset.step); if (step === 1 && validateStepOne()) { safeTrack('calculator_step_1_complete', calculatorState.utm); showStep(2); } if (step === 2 && validateStepTwo()) { safeTrack('calculator_step_2_complete', calculatorState.utm); showStep(3); } }));
@@ -262,6 +318,10 @@ function initCalculator() {
   });
 }
 
-initCalculator();
+if (typeof document !== 'undefined') initCalculator();
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = { formatMoney, normalizeCurrency, computeOpportunities, labelCurrencyNodes, CURRENCY_CODES };
+}
 
 

@@ -40,29 +40,58 @@ if ('IntersectionObserver' in window && !window.matchMedia('(prefers-reduced-mot
 }
 
 const utmKeys = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content'];
+const pageKeys = ['source_page', 'campaign'];
 const currentUtm = {};
+const currentPageAttribution = {};
+
+function rememberAttribution(storageKey, target, key, value, max) {
+  target[key] = String(value).slice(0, max);
+  try { sessionStorage.setItem(storageKey, target[key]); } catch (_) { /* Storage can be disabled. */ }
+}
 
 function persistUtmParameters() {
   const params = new URLSearchParams(window.location.search);
   utmKeys.forEach((key) => {
     const value = params.get(key);
-    if (value) {
-      currentUtm[key] = value.slice(0, 120);
-      try { sessionStorage.setItem(`praxora_${key}`, currentUtm[key]); } catch (_) { /* Storage can be disabled. */ }
-    }
+    if (value) rememberAttribution(`praxora_${key}`, currentUtm, key, value, 120);
+  });
+  pageKeys.forEach((key) => {
+    const value = params.get(key);
+    if (value) rememberAttribution(`praxora_${key}`, currentPageAttribution, key, value, 80);
   });
 }
 
-function getStoredUtmParameters() {
-  return utmKeys.reduce((values, key) => {
-    values[key] = currentUtm[key] || '';
+function readAttribution(keys, memory) {
+  return keys.reduce((values, key) => {
+    values[key] = memory[key] || '';
     try { values[key] = values[key] || sessionStorage.getItem(`praxora_${key}`) || ''; } catch (_) { /* Keep the current-page attribution. */ }
     return values;
   }, {});
 }
 
+function getStoredUtmParameters() {
+  return readAttribution(utmKeys, currentUtm);
+}
+
+function getPageAttribution() {
+  return { ...getStoredUtmParameters(), ...readAttribution(pageKeys, currentPageAttribution) };
+}
+
+document.querySelectorAll('[data-source-page]').forEach((node) => {
+  node.addEventListener('click', () => {
+    const sourcePage = node.getAttribute('data-source-page') || '';
+    const campaign = node.getAttribute('data-campaign') || '';
+    if (sourcePage) rememberAttribution('praxora_source_page', currentPageAttribution, 'source_page', sourcePage, 80);
+    if (campaign) rememberAttribution('praxora_campaign', currentPageAttribution, 'campaign', campaign, 80);
+  });
+});
+
 persistUtmParameters();
-window.PraxoraUtm = { persist: persistUtmParameters, get: getStoredUtmParameters };
+window.PraxoraUtm = {
+  persist: persistUtmParameters,
+  get: getStoredUtmParameters,
+  getAttribution: getPageAttribution
+};
 
 // Only the canonical production site contributes to the production GA4 property.
 const productionAnalytics = window.location.hostname === 'www.getpraxora.com';

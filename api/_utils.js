@@ -291,8 +291,24 @@ async function sendEmail({ to, subject, text }) {
   return body;
 }
 
-function formatCurrency(value) {
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(Math.round(safeNumber(value)));
+const DISPLAY_CURRENCIES = new Set(['GBP', 'EUR', 'USD', 'AUD', 'SGD']);
+
+function normalizeDisplayCurrency(value) {
+  const code = cleanString(value, 8).toUpperCase();
+  return DISPLAY_CURRENCIES.has(code) ? code : 'USD';
+}
+
+function formatCurrency(value, currency = 'USD') {
+  const code = normalizeDisplayCurrency(currency);
+  const rounded = Math.round(safeNumber(value));
+  const amount = Object.is(rounded, -0) ? 0 : rounded;
+  const formatted = new Intl.NumberFormat('en-GB', {
+    maximumFractionDigits: 0,
+    minimumFractionDigits: 0
+  }).format(amount);
+  if (code === 'GBP') return `£${formatted}`;
+  if (code === 'EUR') return `€${formatted}`;
+  return `${code} ${formatted}`;
 }
 
 const leakDisplayNames = {
@@ -325,6 +341,7 @@ module.exports = {
   selectSupabase,
   enforceRateLimit,
   sendEmail,
+  normalizeDisplayCurrency,
   formatCurrency,
   leakDisplayNames,
   leakDiagnoses

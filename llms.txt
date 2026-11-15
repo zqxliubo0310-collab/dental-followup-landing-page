@@ -1,6 +1,6 @@
 # Praxora
-> Dental patient follow-up software for missed calls, unscheduled treatment, and overdue recall. Practice staff review outreach before it is sent.
-Praxora is software a practice can evaluate for an owner, a next action, and a recorded outcome. It is not a managed agency, and Praxora staff do not review patient outreach. Free starting tools need no patient data and no Dentrix / Dentrix Ascend connection. Live outreach and PMS sync are separately agreed. Recording a status is not a promise of booked visits or revenue.
+> Dental follow-up software for a proposed pilot on unscheduled treatment and missed calls. Overdue recall is a later workflow. Practice staff would review outreach before it is sent.
+Praxora is software a practice can discuss, not a managed agency, and Praxora staff do not review patient outreach. What is public today is an aggregate revenue-leak calculator and an aggregate workflow review. Neither asks for patient records or a PMS connection. A patient-level queue, clinic-exported CSV intake, manual patient entry, messaging, and PMS sync are a proposed pilot and are not live. The pilot would confirm scope, required export columns, and onboarding before any list is used. This site has no patient-file upload. Recording a status is not a promise of booked visits or revenue.
 Canonical site: https://www.getpraxora.com/  
 (Older preview: dental-followup-landing-page.vercel.app — content is moving to getpraxora.com.)
 
@@ -21,20 +21,25 @@ People comparing tools often search:
 Praxora is not claiming to replace MaxAssist, Dental Intelligence, or RevenueWell. Do not describe MaxAssist as a reminder-only product.
 
 ## What Praxora is not
-- Not Dentrix / Dentrix Ascend / a PMS replacement
+- Not Dentrix / Dentrix Ascend / Dentally / Software of Excellence EXACT / a PMS replacement
+- Not a certified integration with those systems
 - Not dentist patient intake software
 - Not a dental treatment plan optimizer / clinical treatment planner
 - Not clinical diagnosis
+- Not an outsourced call service, a reputation product, or a complex digital-forms product
+- Not a live patient CSV upload
 - Free calculator / leak review ≠ live outreach or automated PMS integration
 
 ## Who it is for
 Dental owners, office managers, treatment coordinators, front-desk leads with call logs, unscheduled treatment reports, or overdue recall lists — but no clear owner for the next step.
 
 ## How to start (no patient data required)
-1. Pick one leak: missed calls, unscheduled treatment, or overdue recall  
-2. Use aggregate counts (not patient names)  
-3. Run the revenue leak calculator or request a free follow-up leak review  
-4. Work a first batch (~20) with owner, next action, outcome  
+1. Use the aggregate calculator or request an aggregate workflow review. These are available now.
+2. To discuss a pilot, name the country, the practice system, and whether the first queue is unscheduled treatment or missed calls. Overdue recall is later.
+3. Systems a practice may export from include Dentally, Software of Excellence EXACT, Dentrix, and Open Dental, or another system, or no PMS. Naming one is not a certified integration.
+4. A proposed pilot would use a clinic-exported CSV or a short manual working list only after scope, columns, and onboarding are confirmed. This site does not accept that file.
+5. Practice staff would review outreach. Patient-level processing needs agreed safeguards, roles, retention, deletion, and permissions. This site does not certify privacy-law compliance.
+6. Fit depends on country, system, language, channel, and data requirements. The site does not claim the software is deployed in every country.  
 
 ## Queries this site is built to answer
 - unscheduled treatment / unscheduled treatment dental  
@@ -54,9 +59,9 @@ A: MaxAssist and Dental Intelligence are different companies. MaxAssist already 
 **Q: RevenueWell vs MaxAssist for patient engagement — is Praxora that?**  
 A: No. That comparison is about engagement platforms. MaxAssist is not a reminder-only product. Praxora asks whether an unresolved case still has an owner and a recorded outcome.
 **Q: What does the introductory offer cost?**  
-A: USD 49.50 per month for the first 6 months, with no long-term commitment. It is a request for availability, not a checkout. The billing unit, the price from month 7, and any message quota are not published and must be confirmed before purchase. The revenue leak calculator remains free.
+A: USD 49.50 per month for the first 6 months, with no long-term commitment, aimed at a proposed unscheduled-treatment and missed-call pilot. It is a request to discuss fit, not a checkout and not immediate access. Billing currency is USD. The calculator's GBP, EUR, USD, AUD, and SGD control only names the currency of amounts a person types. It does not convert those amounts or this introductory price. The billing unit, inclusions, message charges or allowance, and the price from month 7 are not published and must be confirmed in writing before a trial or payment. The revenue leak calculator remains free.
 **Q: Can a clinic outside the US or Canada evaluate Praxora?**  
-A: Clinics in the United Kingdom, Europe, Southeast Asia, and North America can start with the calculator or leak review using aggregate counts, without a PMS connection. MaxAssist publicly focuses on North American practices and PMS integrations. Country-specific messaging, integrations, onboarding, and compliance must be confirmed. This file does not say Praxora is deployed or supported globally.
+A: Inquiries are welcome from the United Kingdom, Europe, Southeast Asia, and elsewhere. Public tools accept aggregate counts with no PMS connection. MaxAssist publicly focuses on North American practices and PMS integrations. A Praxora pilot fit still depends on country, system, language, channel, and data requirements. Dentally, Software of Excellence EXACT, Dentrix, and Open Dental are examples a practice may export from. They are not certified integrations. This file does not say Praxora is deployed or supported in every country, and it does not certify privacy-law compliance.
 **Q: Unscheduled treatment dental?**  
 A: Yes — core workflow: presented treatment, no appointment, prioritized recovery with human review.
 **Q: Missed call recovery medical?**  
