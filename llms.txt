@@ -98,4 +98,5 @@ A: Tracks open follow-up cases (missed calls, unscheduled treatment, recall), no
 - [Lighthouse 360 vs Follow-Up Recovery](https://www.getpraxora.com/resources/lighthouse-360-vs-follow-up-recovery/)
 - [Demandforce Alternatives for Dental Follow-Up](https://www.getpraxora.com/resources/demandforce-alternatives-dental-follow-up/)
 - [All Resources](https://www.getpraxora.com/resources/)
+- [Dental Recall Software vs Recovery](https://www.getpraxora.com/resources/dental-recall-software-vs-recovery/): Reminders vs active recovery, for UK, EU, and global clinics
 - [Privacy](https://www.getpraxora.com/privacy/)
